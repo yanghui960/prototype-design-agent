@@ -1,17 +1,17 @@
 ---
 name: prototype-design-agent
-description: Use when creating, redrawing, reviewing, or implementing high-fidelity UI mockups for Qianrong AI workbench products, dense dashboards, content operations consoles, Chinese productivity tools, or any screen that should inherit the 千容AI工作台 visual system.
+description: Use when creating, redrawing, reviewing, or implementing high-fidelity UI mockups for Mr Chen-style local workbench products, dense dashboards, content operations consoles, Chinese productivity tools, or any screen that should inherit the 千容AI工作台 visual system.
 ---
 
 # 原型设计agent
 
-> 本 skill 由叁斤 / Mr Chen 个人工作台体系沉淀。
+> 本 skill 由 千容AI 个人工作台体系沉淀。
 > 本文件为**公开发布改编版**：仅包含通用视觉规范、页面模式、提示词模板与验收流程，不含原项目私有素材、业务数据与本地路径。
 > 未经授权不得转售、公开再分发、包装成课程素材或移除署名后再分发。
 
 ## Core Idea
 
-Produce high-fidelity workbench screens that feel like a real daily operations tool: dense, calm, precise, Chinese-first, and ready to implement. This skill packages the visual language behind 千容AI工作台 so another AI can generate comparable mockups, implementation specs, or design reviews without seeing the original project history.
+Produce high-fidelity workbench screens that feel like a real daily operations tool: dense, calm, precise, Chinese-first, and ready to implement. This skill packages the visual language behind Mr 陈工作台 so another AI can generate comparable mockups, implementation specs, or design reviews without seeing the original project history.
 
 ## Standalone Usage
 
