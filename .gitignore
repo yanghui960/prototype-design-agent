@@ -1,7 +1,7 @@
 # 千容AI工作台 · 本地数据（不入库）
-workbench/data/*.db
-workbench/data/*.db-journal
-workbench/data/*.db-wal
-workbench/data/*.db-shm
+**/data/*.db
+**/data/*.db-journal
+**/data/*.db-wal
+**/data/*.db-shm
 # 本地 AI 密钥配置（若落盘，绝不入库）
 workbench/config.local.json
