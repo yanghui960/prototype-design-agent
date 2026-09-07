@@ -172,5 +172,45 @@
   </div>
 </div>
 <script>(function(){ var tabs=document.querySelectorAll('.tab'); tabs.forEach(function(t){t.addEventListener('click',function(){tabs.forEach(function(x){x.classList.remove('active');}); t.classList.add('active');});}); })();</script>
+<script src="workbench.js"></script>
+<script>
+WB.ready(function(online){ if(!online) return;
+  WB.api('/api/settings/ai').then(function(d){
+    if(!d) return;
+    var box=document.createElement('div');
+    box.style.cssText='background:#fff;border:1px solid #E2E4E8;border-radius:8px;padding:14px 16px;';
+    box.innerHTML='<div style="font-size:14px;font-weight:600;margin-bottom:4px;">AI 服务连接</div>'+
+      '<div style="font-size:11.5px;color:#9AA0A6;margin-bottom:12px;">OpenAI 兼容协议 · 支持豆包 / 通义 / DeepSeek / Ollama 等任意端点</div>'+
+      '<div style="display:flex;flex-direction:column;gap:10px;">'+
+      '<div><div style="font-size:12px;color:#686D76;margin-bottom:4px;">Base URL</div><input id="wb-base" placeholder="https://api.openai.com/v1 或 https://dashscope.aliyuncs.com/compatible-mode/v1" style="width:100%;padding:8px 10px;border:1px solid #E2E4E8;border-radius:6px;font-size:13px;box-sizing:border-box;"></div>'+
+      '<div><div style="font-size:12px;color:#686D76;margin-bottom:4px;">API Key</div><input id="wb-key" type="password" placeholder="sk-…" style="width:100%;padding:8px 10px;border:1px solid #E2E4E8;border-radius:6px;font-size:13px;box-sizing:border-box;"></div>'+
+      '<div><div style="font-size:12px;color:#686D76;margin-bottom:4px;">模型名</div><input id="wb-model" placeholder="gpt-4o-mini / qwen-plus / deepseek-chat" style="width:100%;padding:8px 10px;border:1px solid #E2E4E8;border-radius:6px;font-size:13px;box-sizing:border-box;"></div>'+
+      '<div style="display:flex;gap:8px;align-items:center;"><div id="wb-save" class="btn primary" style="cursor:pointer;">保存并测试</div><div id="wb-test" class="btn" style="cursor:pointer;">仅测试连接</div><div id="wb-status" style="font-size:12px;color:#9AA0A6;"></div></div>'+
+      '</div>';
+    var card=document.querySelector('.card');
+    var target=document.querySelector('.save-bar')||card;
+    if(target.parentNode) target.parentNode.insertBefore(box,target);
+    var base=document.getElementById('wb-base'), key=document.getElementById('wb-key'), model=document.getElementById('wb-model'), st=document.getElementById('wb-status');
+    base.value=d.baseUrl||''; model.value=d.model||'';
+    if(d.apiKeySet&&d.apiKeySet!=='未配置') key.placeholder='已配置 · 留空保持不变';
+    function save(testOnly){
+      var payload={baseUrl:base.value.trim(),model:model.value.trim()};
+      if(key.value) payload.apiKey=key.value.trim();
+      if(!payload.baseUrl||!payload.model){ st.textContent='Base URL 与模型名必填'; return; }
+      st.textContent='保存中…';
+      WB.api('/api/settings/ai',{method:'PUT',body:payload}).then(function(r){
+        st.textContent='已保存';
+        if(testOnly){
+          WB.api('/api/ai/revise',{method:'POST',body:{title:'连接测试',content:'测试'}}).then(function(d2){
+            st.textContent=d2.aiMode==='ai'?'✅ 连接成功，AI 已生效':'⚠ 已保存；测试走模板（检查 Base URL / Key / 模型名）';
+          });
+        } else { st.textContent='✅ 已保存'; WB.toast('AI 配置已保存到本地'); }
+      });
+    }
+    document.getElementById('wb-save').onclick=function(){save(false);};
+    document.getElementById('wb-test').onclick=function(){save(true);};
+  });
+});
+</script>
 </body>
 </html>

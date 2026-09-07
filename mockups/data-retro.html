@@ -259,5 +259,61 @@
   </div>
 </div>
 <script>(function(){ var items=document.querySelectorAll('.h-item'); items.forEach(function(it){ it.addEventListener('click',function(){ items.forEach(function(x){x.classList.remove('active');}); it.classList.add('active'); }); }); })();</script>
+<script src="workbench.js"></script>
+<script>
+WB.ready(function(online){ if(!online) return;
+  var hList=null;
+  function loadReports(activeId){
+    WB.api('/api/reports').then(function(d){
+      if(!d.items) return;
+      var first=document.querySelector('.h-item');
+      var container=first?first.parentNode:document.querySelector('.h-list');
+      if(!container) return;
+      container.innerHTML='';
+      d.items.forEach(function(r){
+        var it=document.createElement('div'); it.className='h-item'+(r.id===activeId?' active':'');
+        var period=r.period||'';
+        it.innerHTML='<div class="h-date num">'+period+'</div><div class="h-title"></div><div class="h-status"><span class="ok">已生成</span></div>';
+        it.querySelector('.h-title').textContent=r.title;
+        it.addEventListener('click',function(){
+          container.querySelectorAll('.h-item').forEach(function(x){x.classList.remove('active');});
+          it.classList.add('active');
+          var s=(Array.isArray(r.summary)?r.summary:[]);
+          if(s.length>=4){
+            var cells=document.querySelectorAll('.report-kv .kv-cell, .ov-grid .ov-cell');
+            if(cells.length>=4){
+              cells[0].querySelector('.kv-value, .ov-value').textContent=s[0].value;
+              cells[1].querySelector('.kv-value, .ov-value').textContent=s[1].value;
+              cells[2].querySelector('.kv-value, .ov-value').textContent=s[2].value;
+              cells[3].querySelector('.kv-value, .ov-value').textContent=s[3].value;
+            }
+          }
+          WB.toast('已加载：'+r.title);
+        });
+        container.appendChild(it);
+      });
+    });
+  }
+  loadReports(1);
+  function findBtn(text){
+    var els=document.querySelectorAll('div,span');
+    for(var i=0;i<els.length;i++){
+      if(els[i].children.length===0&&els[i].textContent.trim()===text) return els[i];
+    }
+    return null;
+  }
+  var genBtn=findBtn('生成报告');
+  if(genBtn) genBtn.onclick=function(){
+    genBtn.textContent='生成中…';
+    WB.api('/api/reports/generate',{method:'POST',body:{period:'09-01 至 09-07 (本周)',title:'本周复盘报告'}}).then(function(d){
+      genBtn.textContent='生成报告';
+      WB.toast(d.aiMode==='ai'?'报告已由 AI 生成':'报告已生成（模板）'+(d.aiError?'：'+d.aiError:''));
+      loadReports(d.id);
+    });
+  };
+  var reBtn=findBtn('重新导入');
+  if(reBtn) reBtn.onclick=function(){ WB.toast('请将导出文件放入 workbench/data/imports 后重试（示例流程）'); };
+});
+</script>
 </body>
 </html>

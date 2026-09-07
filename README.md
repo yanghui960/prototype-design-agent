@@ -67,6 +67,18 @@ prototype-design-agent/
 
 每个页面同时附 1440×900 的 PNG 预览（同名文件）。页面内数据均为**示例数据**，用于展示结构与交互；侧栏全站互链，抽屉 / Tab / 筛选均可点击体验。直接用浏览器打开 `mockups/index.html` 即可，无需启动任何服务。
 
+## 运行工作台（真实数据 + AI）
+
+仓库附带可运行的本地工作台（`workbench/`）：9 个页面从示例数据切换为 **SQLite 真实数据**，动作真实落库，并可接入任意 OpenAI 兼容 AI 服务（豆包 / 通义 / DeepSeek / Ollama）。
+
+```bash
+cd workbench
+node server.js          # 需要 Node >= 22.5，零 npm 依赖
+# 浏览器打开 http://127.0.0.1:8787/
+```
+
+详见 `workbench/README.md`（API 一览、AI 配置方法、数据与隐私说明）。
+
 ## 核心视觉规范速览
 
 | 项 | 值 |

@@ -241,5 +241,58 @@
   </div>
 </div>
 <script>(function(){ var revs=document.querySelectorAll('.rev-item'); revs.forEach(function(item){ var acts=item.querySelectorAll('.r-actions span'); acts.forEach(function(a){ a.addEventListener('click',function(){ if(a.textContent.indexOf('应用')>=0){ item.style.borderColor='#2F8F63'; item.style.background='rgba(47,143,99,0.06)'; a.textContent='已应用'; a.style.color='#2F8F63'; } else { item.style.opacity='0.45'; a.textContent='已忽略'; a.style.color='#9AA0A6'; } }); }); }); })();</script>
+<script src="workbench.js"></script>
+<script>
+WB.ready(function(online){ if(!online) return;
+  var draftId=null;
+  var titleInput=document.querySelector('.title-input');
+  var bodyArea=document.querySelector('.body-area');
+  var btnSave=null, btnIn=null;
+  var topBtns=document.querySelectorAll('.topbar .btn');
+  if(topBtns.length>=3){ btnSave=topBtns[0]; btnIn=topBtns[2]; }
+  WB.api('/api/drafts').then(function(d){
+    if(!d.items||!d.items.length) return;
+    var dr=d.items[0]; draftId=dr.id;
+    titleInput.value=dr.title||'';
+    bodyArea.innerHTML='<p>'+(dr.content||'').replace(/\n/g,'</p><p>')+'</p>';
+    var chip=document.querySelector('.platform-chip'); if(chip) chip.textContent=((dr.platforms&&dr.platforms[0])||'小红书')+' · 图文';
+    var pt=document.querySelector('.post-title'); if(pt) pt.textContent=dr.title||'';
+    var pb=document.querySelector('.post-body'); if(pb) pb.textContent=(dr.content||'').slice(0,44)+'…';
+  });
+  function saveDraft(){
+    var payload={title:titleInput.value,content:bodyArea.textContent||'',platforms:['小红书']};
+    var p=draftId?WB.api('/api/drafts/'+draftId,{method:'PUT',body:payload}):WB.api('/api/drafts',{method:'POST',body:payload});
+    p.then(function(r){ if(r.id||r.ok){ draftId=draftId||r.id; WB.toast('草稿已保存到本地数据库'); } });
+  }
+  if(btnSave) btnSave.onclick=saveDraft;
+  if(btnIn) btnIn.onclick=function(){
+    if(!draftId){ WB.toast('请先保存草稿'); return; }
+    WB.api('/api/drafts/'+draftId+'/publish',{method:'POST',body:{}}).then(function(){ WB.toast('已确认入库，状态：已发布'); });
+  };
+  var tbAi=document.querySelector('.tb-ai');
+  if(tbAi) tbAi.onclick=function(){
+    WB.toast('AI 修订生成中…');
+    WB.api('/api/ai/revise',{method:'POST',body:{title:titleInput.value,content:bodyArea.textContent||''}}).then(function(d){
+      var r=d.result||{}; if(!r.titleOptions&&!r.hook){ WB.toast('修订失败：'+(d.aiError||'未知')); return; }
+      var list=document.querySelector('.rev-list'); list.innerHTML='';
+      function mk(type,text){
+        var item=document.createElement('div'); item.className='rev-item';
+        item.innerHTML='<div class="r-type">'+type+'</div><div class="r-text"></div><div class="r-actions"><span>应用</span><span>忽略</span></div>';
+        item.querySelector('.r-text').textContent=text;
+        var acts=item.querySelectorAll('.r-actions span');
+        acts[0].onclick=function(){ item.style.borderColor='#2F8F63'; item.style.background='rgba(47,143,99,0.06)'; this.textContent='已应用'; WB.toast('已应用：'+type); };
+        acts[1].onclick=function(){ item.style.opacity='0.45'; this.textContent='已忽略'; };
+        return item;
+      }
+      list.appendChild(mk('标题优化',(r.titleOptions&&r.titleOptions[0])||''));
+      list.appendChild(mk('开头钩子',r.hook||''));
+      list.appendChild(mk('结尾引导',r.ending||''));
+      var info=document.querySelector('.rev-head');
+      if(info&&info.children.length>1){ info.children[1].textContent=d.aiMode==='template'?'基于全文生成（未配置 AI，模板结果）':'基于全文生成 · AI 已生效'; }
+      WB.toast(d.aiMode==='ai'?'AI 修订完成':(d.aiError?'AI 不可用，已用模板：'+d.aiError:'模板修订完成（设置页配置 AI 后自动切换）'));
+    });
+  };
+});
+</script>
 </body>
 </html>

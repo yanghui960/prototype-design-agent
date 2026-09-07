@@ -218,5 +218,83 @@
 
 </div>
 <script>(function(){ var tabs=document.querySelectorAll('.tab'); tabs.forEach(function(t){t.addEventListener('click',function(){tabs.forEach(function(x){x.classList.remove('active');}); t.classList.add('active');});}); var ov=document.querySelector('.drawer-overlay'), cl=document.querySelector('.drawer-close'); if(!ov)return; function closeIt(){ov.style.display='none';} if(cl)cl.addEventListener('click',closeIt); ov.addEventListener('click',function(e){if(e.target===ov)closeIt();}); })();</script>
+<script src="workbench.js"></script>
+<script>
+WB.ready(function(online){ if(!online) return;
+  var drawer=document.querySelector('.drawer-overlay');
+  function closeDrawer(){ drawer.style.display='none'; }
+  var statusMap={done:['st-done','已完成'],running:['st-run','采集中'],pending:['st-idle','待清洗']};
+  function loadList(){
+    WB.api('/api/collections').then(function(d){
+      if(!d.items) return;
+      var badges=document.querySelectorAll('.tab .badge');
+      if(badges[0]) badges[0].textContent=d.items.length;
+      var list=document.querySelector('.collect-list'); list.innerHTML='';
+      d.items.forEach(function(c){
+        var card=document.createElement('div'); card.className='c-card';
+        var st=statusMap[c.status]||['st-idle','待清洗'];
+        var items=Array.isArray(c.items)?c.items:[];
+        card.innerHTML='<div class="c-icon coral">📈</div><div class="c-main"><div class="c-title"></div><div class="c-meta"><span></span><span></span></div><div class="c-stats"><span>条目 '+items.length+' 条</span><span>关键词：'+(c.keyword||'-')+'</span></div></div><div class="c-status '+st[0]+'">'+st[1]+'</div>';
+        card.querySelector('.c-title').textContent=c.name;
+        var metas=card.querySelectorAll('.c-meta span');
+        metas[0].textContent=c.platform||'-'; metas[1].textContent=c.created_at||'';
+        card.addEventListener('click',function(){ openResult(c); });
+        list.appendChild(card);
+      });
+    });
+  }
+  function openResult(c){
+    document.querySelector('.drawer-title').textContent='采集结果 · '+c.keyword;
+    var body=document.querySelector('.drawer-body');
+    var items=Array.isArray(c.items)&&c.items.length?c.items:['示例条目 1','示例条目 2'];
+    var html='<div class="pick-all"><span class="ckb on"></span>全选（'+items.length+' 条已清洗）</div>';
+    items.slice(0,8).forEach(function(it){
+      html+='<div class="pick-item"><span class="ckb on"></span><span class="pick-title"></span><span class="pick-tag">高相关</span></div>';
+    });
+    body.innerHTML=html;
+    var titles=body.querySelectorAll('.pick-title');
+    items.slice(0,8).forEach(function(it,i){ if(titles[i]) titles[i].textContent=(typeof it==='string'?it:it.title||'未命名条目'); });
+    var foot=document.querySelector('.drawer-foot');
+    foot.innerHTML='<div class="btn ghost">取消选择</div><div class="btn">清洗所选</div><div class="btn primary">生成洞察</div>';
+    foot.querySelector('.btn.ghost').onclick=closeDrawer;
+    foot.querySelectorAll('.btn')[1].onclick=function(){
+      WB.api('/api/collections/clean',{method:'POST',body:{ids:[c.id]}}).then(function(r){
+        WB.toast('已清洗 '+((r&&r.cleaned)||0)+' 个任务'); loadList(); closeDrawer();
+      });
+    };
+    foot.querySelector('.btn.primary').onclick=function(){
+      var btn=this; btn.textContent='生成中…';
+      WB.api('/api/ai/insight',{method:'POST',body:{keyword:c.keyword||c.name}}).then(function(d){
+        var r=d.result||{};
+        body.innerHTML='<div class="pick-all" style="font-weight:600;">洞察报告 · '+(c.keyword||'')+'</div>'+
+          '<div style="font-size:12.5px;line-height:1.7;color:#202124;padding:6px 0;">'+(r.overview||'')+'</div>'+
+          '<div style="font-size:12.5px;padding:4px 0;">'+(r.points||[]).map(function(p){return '· '+p;}).join('<br>')+'</div>'+
+          '<div style="font-size:12.5px;padding:4px 0;color:#B34B3A;">建议：'+(r.suggestion||'')+'</div>'+
+          '<div style="font-size:11px;color:#9AA0A6;padding-top:6px;">'+(d.aiMode==='template'?'（模板生成，配置 AI 后自动切换真实洞察）':'AI 生成')+'</div>';
+        foot.innerHTML='<div class="btn primary" style="flex:1;">完成</div>';
+        foot.querySelector('.btn').onclick=closeDrawer;
+        WB.toast('洞察已生成');
+      });
+    };
+    drawer.style.display='flex';
+  }
+  var composerBtn=document.querySelector('.composer-btn');
+  if(composerBtn) composerBtn.onclick=function(){
+    var input=document.querySelector('.composer-input');
+    var kw=input?input.textContent.trim():'';
+    if(!kw||kw.indexOf('粘贴')>=0){ WB.toast('请先输入关键词或链接'); return; }
+    WB.api('/api/collections',{method:'POST',body:{name:kw+' 采集任务',platform:'小红书',keyword:kw,status:'running'}}).then(function(){
+      WB.toast('采集任务已发起'); loadList();
+    });
+  };
+  loadList();
+  WB.api('/api/topics').then(function(d){
+    var badges=document.querySelectorAll('.tab .badge');
+    if(badges[2]&&d.items) badges[2].textContent=d.items.length;
+  });
+  document.querySelector('.drawer-close').addEventListener('click',closeDrawer);
+  drawer.addEventListener('click',function(e){ if(e.target===drawer) closeDrawer(); });
+});
+</script>
 </body>
 </html>

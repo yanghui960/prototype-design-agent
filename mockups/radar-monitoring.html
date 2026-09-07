@@ -280,5 +280,50 @@
 
 </div>
 <script>(function(){ var ov=document.querySelector('.drawer-overlay'), rows=document.querySelectorAll('.reminder-row'), cl=document.querySelector('.drawer-close'); if(!ov)return; function open(){ov.style.display='flex';} function closeIt(){ov.style.display='none';} if(cl)cl.addEventListener('click',closeIt); rows.forEach(function(r){r.addEventListener('click',open);}); ov.addEventListener('click',function(e){if(e.target===ov)closeIt();}); })();</script>
+<script src="workbench.js"></script>
+<script>
+WB.ready(function(online){ if(!online) return;
+  function $$(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  function drawSig(container,strength){ var sig=document.createElement('span'); sig.className='signal-mini';
+    for(var i=1;i<=3;i++){ var d=document.createElement('span'); d.className='mini-dot'+(i<=strength?'':' gray'); sig.appendChild(d); }
+    container.appendChild(sig); }
+  var ov=document.querySelector('.drawer-overlay');
+  function openDetail(s){
+    document.querySelector('.drawer-title').textContent='机会详情';
+    var body=document.querySelector('.drawer-body');
+    body.innerHTML='<div><div class="d-section">机会名称</div><div class="d-value">「'+s.keyword+'」'+s.platform+'</div></div>'+
+      '<div><div class="d-section">信号来源</div><div class="d-value">'+s.platform+' · '+(s.created_at||'')+'</div></div>'+
+      '<div><div class="d-section">信号强度</div><div class="signal-mini" style="margin-top:6px;"></div><div style="font-size:11px;color:#9AA0A6;margin-top:4px;">'+s.summary+'</div></div>'+
+      '<div><div class="d-section">关联关键词</div><div class="d-tags"><span class="d-tag coral">'+s.keyword+'</span></div></div>'+
+      '<div><div class="d-section">机会描述</div><div class="d-desc">'+s.summary+'</div></div>';
+    drawSig(body.querySelector('.signal-mini'),s.strength);
+    var btns=document.querySelectorAll('.drawer-foot .btn');
+    btns[0].onclick=function(){ WB.api('/api/radar/signals/'+s.id,{method:'PATCH',body:{status:'followed'}}).then(function(){ WB.toast('已标记「稍后跟进」'); ov.style.display='none'; }); };
+    btns[1].onclick=function(){ WB.api('/api/topics',{method:'POST',body:{title:'「'+s.keyword+'」选题',platform:s.platform,score:80}}).then(function(){ WB.toast('已转为选题，写入选题池'); ov.style.display='none'; }); };
+    ov.style.display='flex';
+  }
+  WB.api('/api/radar/signals').then(function(d){
+    if(!d.items) return;
+    var items=d.items, vs=$$('.metric .m-value');
+    vs[0].textContent=items.length;
+    vs[1].textContent=items.filter(function(s){return s.level==='high';}).length;
+    vs[2].textContent=items.filter(function(s){return s.status==='pending';}).length;
+    vs[3].textContent=items.filter(function(s){return s.status==='followed';}).length;
+    var list=document.querySelector('.col-left .card-body'); list.innerHTML='';
+    items.forEach(function(s){
+      var row=document.createElement('div'); row.className='reminder-row';
+      row.innerHTML='<span class="pri '+s.level+'">'+(s.level==='high'?'高':(s.level==='mid'?'中':'低'))+'</span>'+
+        '<div class="reminder-main"><div class="reminder-title"></div><div class="reminder-meta"><span></span><span></span></div></div>'+
+        '<span class="reminder-time num">'+(s.created_at||'').slice(-5)+'</span>';
+      row.querySelector('.reminder-title').textContent='「'+s.keyword+'」'+s.platform+' · '+s.summary.slice(0,16);
+      var metas=row.querySelectorAll('.reminder-meta span');
+      metas[0].textContent=s.platform+' · 内容趋势'; metas[1].textContent='关键词：'+s.keyword;
+      drawSig(row.querySelector('.reminder-main'),s.strength);
+      row.addEventListener('click',function(){ openDetail(s); });
+      list.appendChild(row);
+    });
+  });
+});
+</script>
 </body>
 </html>

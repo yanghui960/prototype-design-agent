@@ -240,5 +240,53 @@
   </div>
 </div>
 <script>(function(){ var ms=document.querySelectorAll('.metric'); ms.forEach(function(m){ m.addEventListener('click',function(){ ms.forEach(function(x){x.style.boxShadow='none'; x.style.borderColor='#E2E4E8';}); m.style.boxShadow='0 0 0 1px #E76852'; m.style.borderColor='#E76852'; }); }); })();</script>
+<script src="workbench.js"></script>
+<script>
+WB.ready(function(online){ if(!online) return;
+  function $$(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  WB.api('/api/todos').then(function(d){
+    if(!d.items) return;
+    var open=d.items.filter(function(t){return !t.done;}).length;
+    $$('.metric .m-value')[0].textContent=open+' 项';
+    var head=document.querySelector('.col-main .card .card-head .card-count'); if(head) head.textContent=d.items.length+' 项';
+    var list=document.querySelector('.col-main .card .card-body');
+    list.innerHTML='';
+    d.items.slice(0,5).forEach(function(t){
+      var row=document.createElement('div'); row.className='task-row'+(t.done?' done':'');
+      row.innerHTML='<span class="cb'+(t.done?' checked':'')+'"></span><span class="task-name"></span><span class="tag">'+t.tag+'</span><span class="task-time num">'+t.time+'</span>';
+      row.querySelector('.task-name').textContent=t.title;
+      row.querySelector('.cb').addEventListener('click',function(){
+        WB.api('/api/todos/'+t.id,{method:'PATCH',body:{done:!t.done}}).then(function(){
+          t.done=!t.done; row.classList.toggle('done',t.done); row.querySelector('.cb').classList.toggle('checked',t.done);
+        });
+      });
+      list.appendChild(row);
+    });
+  });
+  WB.api('/api/radar/signals').then(function(d){
+    if(!d.items) return;
+    $$('.metric .m-value')[1].textContent=d.items.length;
+    var table=document.querySelectorAll('.col-main table')[0];
+    if(!table) return;
+    var rows=table.querySelectorAll('tr'); for(var i=1;i<rows.length;i++) rows[i].remove();
+    d.items.slice(0,4).forEach(function(s){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td></td><td>'+s.platform+'</td><td></td><td></td><td class="num">'+(s.created_at||'').slice(-5)+'</td>';
+      tr.children[0].textContent=s.keyword;
+      tr.children[2].textContent=s.level==='high'?'选题':(s.level==='mid'?'热点':'机会');
+      var sig=document.createElement('span'); sig.className='signal';
+      for(var j=1;j<=3;j++){ var dot=document.createElement('span'); dot.className='sig-dot'+(j<=s.strength?'':' gray'); sig.appendChild(dot); }
+      tr.children[3].appendChild(sig);
+      table.appendChild(tr);
+    });
+  });
+  WB.api('/api/logs?level=error').then(function(d){
+    var box=document.querySelector('.col-rail .card:nth-child(2) .card-body');
+    if(!box) return;
+    if(d.items&&d.items.length){ box.innerHTML='<div class="alert-row"><span>⚠ '+d.items[0].message.slice(0,16)+'</span><span class="link">查看</span></div>'; }
+    else { box.innerHTML='<div class="alert-row"><span>✅ 系统无异常</span></div>'; }
+  });
+});
+</script>
 </body>
 </html>

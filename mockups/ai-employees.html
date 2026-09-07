@@ -204,5 +204,30 @@
     </div>
   </div>
 </div>
+<script src="workbench.js"></script>
+<script>
+WB.ready(function(online){ if(!online) return;
+  WB.api('/api/employees').then(function(d){
+    if(!d.items) return;
+    var cards=document.querySelectorAll('.emp-card');
+    cards.forEach(function(card,i){
+      var e=d.items[i]; if(!e) return;
+      card.querySelector('.emp-name').textContent=e.name;
+      card.querySelector('.emp-role').textContent=e.role;
+      var chip=card.querySelector('.engine-chip'); if(chip) chip.textContent=e.engine;
+      card.querySelector('.emp-duty').textContent=e.duty;
+      var task=card.querySelector('.emp-task');
+      task.innerHTML='<span class="'+(e.status==='idle'?'none':'running')+'"></span>'+e.task;
+      var stats=card.querySelectorAll('.stat-cell .v');
+      if(stats.length>=4){ stats[0].textContent=e.today; stats[1].textContent=e.week; stats[2].textContent=e.total; stats[3].textContent=e.success; }
+      var st=card.querySelector('.emp-status');
+      var map={online:['st-online','在线'],busy:['st-busy','执行中'],idle:['st-idle','空闲']};
+      var m=map[e.status]||map.online;
+      st.className='emp-status '+m[0]; st.textContent=m[1];
+      card.querySelector('.emp-last').textContent='最近活跃：'+e.last_active;
+    });
+  });
+});
+</script>
 </body>
 </html>

@@ -1,0 +1,13 @@
+{
+  "name": "qianrong-workbench",
+  "version": "1.0.0",
+  "description": "千容AI工作台 · 本地可运行工作台（零依赖，node >= 22.5）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "private": true
+}
