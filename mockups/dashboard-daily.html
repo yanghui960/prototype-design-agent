@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>千容AI工作台 · 日常仪表盘</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #F5F6F7; color: #202124; font-size: 13px; display: flex;
+  }
+  .num { font-family: SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .app { display: flex; width: 1440px; height: 900px; }
+
+  /* ===== 侧栏 ===== */
+  .sidebar { width: 232px; background: #F0F1F2; border-right: 1px solid #E2E4E8; padding: 16px 10px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 4px 8px 16px; }
+  .logo-badge { width: 26px; height: 26px; background: #E76852; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; }
+  .logo-name { font-size: 14px; font-weight: 600; color: #202124; }
+  .nav-group { margin-bottom: 14px; }
+  .nav-group-title { font-size: 11px; color: #686D76; padding: 6px 10px 4px; letter-spacing: 0; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; color: #202124; font-size: 13px; cursor: pointer; position: relative; }
+  .nav-item .ic { width: 16px; height: 16px; color: #686D76; flex-shrink: 0; }
+  .nav-item.active { background: rgba(231,104,82,0.12); color: #202124; }
+  .nav-item.active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: #E76852; border-radius: 2px; }
+  .nav-item.active .ic { color: #E76852; }
+  .sidebar-foot { margin-top: auto; border-top: 1px solid #E2E4E8; padding: 12px 10px 4px; }
+  .local-state { font-size: 11px; color: #686D76; display: flex; align-items: center; gap: 6px; }
+  .local-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+
+  /* ===== 主区 ===== */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 52px; background: #FFFFFF; border-bottom: 1px solid #E2E4E8; display: flex; align-items: center; padding: 0 20px; gap: 14px; }
+  .page-title { font-size: 16px; font-weight: 600; }
+  .update-time { font-size: 12px; color: #686D76; }
+  .search { flex: 1; max-width: 340px; margin-left: 24px; display: flex; align-items: center; background: #F5F6F7; border: 1px solid #E2E4E8; border-radius: 6px; padding: 6px 10px; gap: 6px; color: #9AA0A6; font-size: 12px; }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .task-state { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #202124; }
+  .task-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+  .sys-exception { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #C84B45; }
+  .sys-exception .dot { width: 6px; height: 6px; background: #C84B45; border-radius: 50%; }
+
+  .content { flex: 1; padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+  .focus-title { font-size: 18px; font-weight: 600; color: #202124; }
+  .focus-sub { font-size: 12px; color: #686D76; margin-top: 2px; }
+
+  /* 概览条 */
+  .metric-strip { display: flex; gap: 10px; }
+  .metric { flex: 1; background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 8px; padding: 10px 14px; display: flex; align-items: baseline; justify-content: space-between; }
+  .metric .m-label { font-size: 12px; color: #686D76; }
+  .metric .m-value { font-size: 20px; font-weight: 600; }
+  .metric .m-value.hot { color: #E76852; }
+
+  /* 中部：主列 + 右栏 */
+  .mid { display: flex; gap: 12px; flex: 1; min-height: 0; }
+  .col-main { flex: 1.15; display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; }
+  .col-rail { width: 258px; display: flex; flex-direction: column; gap: 12px; min-height: 0; flex-shrink: 0; }
+
+  .card { background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 8px; display: flex; flex-direction: column; min-height: 0; }
+  .card-head { display: flex; align-items: center; padding: 10px 14px 8px; border-bottom: 1px solid #F0F1F2; }
+  .card-title { font-size: 14px; font-weight: 600; }
+  .card-count { margin-left: 8px; font-size: 12px; color: #686D76; }
+  .card-more { margin-left: auto; font-size: 12px; color: #3677A8; cursor: pointer; }
+  .card-body { padding: 6px 14px 12px; overflow: hidden; }
+
+  /* 任务列表 */
+  .task-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #F5F6F7; }
+  .task-row:last-child { border-bottom: none; }
+  .cb { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid #B9BEC6; flex-shrink: 0; position: relative; }
+  .cb.checked { background: #E76852; border-color: #E76852; }
+  .cb.checked::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .task-name { font-size: 13px; }
+  .task-row.done .task-name { color: #9AA0A6; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #F0F1F2; color: #686D76; }
+  .tag.orange { background: rgba(231,104,82,0.12); color: #B34B3A; }
+  .task-time { margin-left: auto; font-size: 12px; color: #9AA0A6; }
+
+  /* 表格 */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; color: #686D76; font-weight: 500; padding: 5px 6px; border-bottom: 1px solid #E2E4E8; }
+  td { font-size: 12.5px; padding: 7px 6px; border-bottom: 1px solid #F5F6F7; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; }
+  th.num { text-align: right; }
+  .signal { display: flex; gap: 3px; }
+  .sig-dot { width: 7px; height: 7px; border-radius: 50%; background: #E76852; }
+  .sig-dot.gray { background: #D4D7DC; }
+  .sig-dot.bg { background: rgba(231,104,82,0.35); }
+  .pct-high { color: #2F8F63; font-weight: 500; }
+
+  /* 右栏 */
+  .insight-item { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid #F5F6F7; font-size: 12.5px; line-height: 1.45; }
+  .insight-item:last-child { border-bottom: none; }
+  .insight-dot { width: 6px; height: 6px; background: #3677A8; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .alert-row { display: flex; align-items: center; gap: 8px; background: rgba(200,75,69,0.06); border: 1px solid rgba(200,75,69,0.2); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; color: #C84B45; }
+  .alert-row .link { margin-left: auto; color: #C84B45; font-size: 12px; }
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 76px; padding: 8px 2px 0; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .bar { width: 16px; background: #E76852; border-radius: 3px 3px 0 0; }
+  .bar.gray { background: #D8DBE0; }
+  .bar-label { font-size: 10px; color: #9AA0A6; }
+  .bar-labels { display: flex; gap: 10px; padding: 0 2px; }
+  .bar-labels span { flex: 1; text-align: center; font-size: 10px; color: #9AA0A6; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 侧栏 -->
+  <aside class="sidebar">
+    <div class="logo"><div class="logo-badge">千</div><div class="logo-name">千容AI工作台</div></div>
+    <div class="nav-group">
+      <div class="nav-group-title">日常</div>
+      <div class="nav-item active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>日常仪表盘</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">运营</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>雷达监控</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>内容选题</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>生产工作室</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">工具</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c1-4 3.5-5.5 6-5.5s5 1.5 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 15c1.5-.6 3-.3 4 1"/></svg>AI 员工</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>知识库</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>数据复盘</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">系统</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2-1.2L14.2 3h-4L9.5 5.7a7 7 0 00-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1c.6.5 1.3.9 2 1.2L10.2 21h4l.3-2.7a7 7 0 002-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>设置</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>系统日志</div>
+    </div>
+    <div class="sidebar-foot">
+      <div class="local-state"><span class="dot"></span>本地模式 · 未连接</div>
+    </div>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">日常仪表盘</div>
+      <div class="update-time">更新于 09:30</div>
+      <div class="search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span>搜索任务、机会、内容…</span>
+      </div>
+      <div class="top-right">
+        <div class="task-state"><span class="dot"></span>运行中 · 3</div>
+        <div class="sys-exception"><span class="dot"></span>系统异常</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div>
+        <div class="focus-title">今天需要关注什么</div>
+        <div class="focus-sub">7 项待办、12 个新机会、4 篇内容待确认</div>
+      </div>
+
+      <div class="metric-strip">
+        <div class="metric"><span class="m-label">今日待办</span><span class="m-value num">7 项</span></div>
+        <div class="metric"><span class="m-label">雷达新增机会</span><span class="m-value num">12</span></div>
+        <div class="metric"><span class="m-label">昨日发布</span><span class="m-value num">4</span></div>
+        <div class="metric"><span class="m-label">内容互动</span><span class="m-value num hot">+18.6%</span></div>
+      </div>
+
+      <div class="mid">
+        <div class="col-main">
+          <div class="card">
+            <div class="card-head"><span class="card-title">今日待办</span><span class="card-count">7 项</span><span class="card-more">查看全部</span></div>
+            <div class="card-body">
+              <div class="task-row done"><span class="cb checked"></span><span class="task-name">刷新热点</span><span class="tag">内容</span><span class="task-time num">09:00</span></div>
+              <div class="task-row done"><span class="cb checked"></span><span class="task-name">确认入库</span><span class="tag orange">数据</span><span class="task-time num">10:30</span></div>
+              <div class="task-row"><span class="cb"></span><span class="task-name">关联选题与素材</span><span class="tag">内容</span><span class="task-time num">14:00</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">雷达新增机会</span><span class="card-count">12 个</span><span class="card-more">进入雷达</span></div>
+            <div class="card-body">
+              <table>
+                <tr><th>机会名</th><th>平台</th><th>类型</th><th>信号强度</th><th class="num">时间</th></tr>
+                <tr><td>AI 写作助手</td><td>小红书</td><td>选题</td><td><span class="signal"><span class="sig-dot"></span><span class="sig-dot"></span><span class="sig-dot"></span></span></td><td class="num">09:12</td></tr>
+                <tr><td>跨境电商选品</td><td>抖音</td><td>热点</td><td><span class="signal"><span class="sig-dot"></span><span class="sig-dot"></span><span class="sig-dot bg"></span></span></td><td class="num">08:47</td></tr>
+                <tr><td>本地生活探店</td><td>公众号</td><td>机会</td><td><span class="signal"><span class="sig-dot gray"></span><span class="sig-dot gray"></span><span class="sig-dot gray"></span></span></td><td class="num">08:03</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">昨天内容数据</span><span class="card-count">3 个平台</span><span class="card-more">数据复盘</span></div>
+            <div class="card-body">
+              <table>
+                <tr><th>平台</th><th class="num">发布数</th><th class="num">阅读量</th><th class="num">互动数</th><th class="num">完成率</th></tr>
+                <tr><td>小红书</td><td class="num">12</td><td class="num">8,600</td><td class="num">412</td><td class="num pct-high">95%</td></tr>
+                <tr><td>公众号</td><td class="num">8</td><td class="num">5,200</td><td class="num">268</td><td class="num pct-high">89%</td></tr>
+                <tr><td>视频号</td><td class="num">5</td><td class="num">3,100</td><td class="num">187</td><td class="num">76%</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-rail">
+          <div class="card">
+            <div class="card-head"><span class="card-title">高价值洞察</span></div>
+            <div class="card-body">
+              <div class="insight-item"><span class="insight-dot"></span>公众号阅读量环比 <span class="num pct-high">+18%</span></div>
+              <div class="insight-item"><span class="insight-dot"></span>雷达捕捉到 2 个高意向机会</div>
+              <div class="insight-item"><span class="insight-dot"></span>昨日互动率高于近 7 日均值</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">系统异常</span></div>
+            <div class="card-body">
+              <div class="alert-row"><span>⚠ 数据库连接慢</span><span class="link">查看</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">本周趋势</span><span class="card-more">详情</span></div>
+            <div class="card-body">
+              <div class="bars">
+                <div class="bar-col"><div class="bar gray" style="height:18px"></div></div>
+                <div class="bar-col"><div class="bar gray" style="height:26px"></div></div>
+                <div class="bar-col"><div class="bar gray" style="height:22px"></div></div>
+                <div class="bar-col"><div class="bar" style="height:34px"></div></div>
+                <div class="bar-col"><div class="bar gray" style="height:40px"></div></div>
+                <div class="bar-col"><div class="bar" style="height:48px"></div></div>
+                <div class="bar-col"><div class="bar gray" style="height:30px"></div></div>
+              </div>
+              <div class="bar-labels"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

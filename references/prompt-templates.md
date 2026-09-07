@@ -5,7 +5,7 @@
 Use this for image-generation or visual-design models.
 
 ```text
-Create a high-fidelity desktop web app mockup for "Mr 陈工作台", a local single-user Chinese operations workbench.
+Create a high-fidelity desktop web app mockup for "千容AI工作台", a local single-user Chinese operations workbench.
 
 Surface: [page name]
 User job: [what the user needs to inspect or complete]
@@ -41,7 +41,7 @@ Output: one polished high-fidelity UI mockup, desktop 1440x900 or 1536x1024, cri
 Use this when asking a coding AI to implement the mockup.
 
 ```text
-Implement this screen in the Mr 陈工作台 visual system.
+Implement this screen in the 千容AI工作台 visual system.
 
 Stack: React + TypeScript + CSS Modules.
 Mode: Operate.
@@ -70,7 +70,7 @@ Reference mockup:
 Use this to ask another AI to audit a mockup or implementation.
 
 ```text
-Review this Mr 陈工作台 high-fidelity screen against the workbench visual system.
+Review this 千容AI工作台 high-fidelity screen against the workbench visual system.
 
 Check, in order:
 1. Does it feel like a real operations workspace instead of a landing page?
