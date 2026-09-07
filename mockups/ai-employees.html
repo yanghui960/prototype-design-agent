@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>千容AI工作台 · AI 员工</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F6F7; color: #202124; font-size: 13px; display: flex; }
+  .num { font-family: SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .app { display: flex; width: 1440px; height: 900px; }
+  a { text-decoration: none; color: inherit; }
+  .sidebar { width: 232px; background: #F0F1F2; border-right: 1px solid #E2E4E8; padding: 16px 10px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 4px 8px 16px; }
+  .logo-badge { width: 26px; height: 26px; background: #E76852; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; }
+  .logo-name { font-size: 14px; font-weight: 600; }
+  .nav-group { margin-bottom: 14px; }
+  .nav-group-title { font-size: 11px; color: #686D76; padding: 6px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; color: #202124; font-size: 13px; position: relative; }
+  .nav-item:hover { background: rgba(0,0,0,0.04); }
+  .nav-item .ic { width: 16px; height: 16px; color: #686D76; flex-shrink: 0; }
+  .nav-item.active { background: rgba(231,104,82,0.12); }
+  .nav-item.active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: #E76852; border-radius: 2px; }
+  .nav-item.active .ic { color: #E76852; }
+  .sidebar-foot { margin-top: auto; border-top: 1px solid #E2E4E8; padding: 12px 10px 4px; }
+  .local-state { font-size: 11px; color: #686D76; display: flex; align-items: center; gap: 6px; }
+  .local-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 52px; background: #FFFFFF; border-bottom: 1px solid #E2E4E8; display: flex; align-items: center; padding: 0 20px; gap: 14px; }
+  .page-title { font-size: 16px; font-weight: 600; }
+  .update-time { font-size: 12px; color: #686D76; }
+  .search { flex: 1; max-width: 340px; margin-left: 24px; display: flex; align-items: center; background: #F5F6F7; border: 1px solid #E2E4E8; border-radius: 6px; padding: 6px 10px; gap: 6px; color: #9AA0A6; font-size: 12px; }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .task-state { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .task-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+  .sys-exception { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #C84B45; }
+  .sys-exception .dot { width: 6px; height: 6px; background: #C84B45; border-radius: 50%; }
+  .content { flex: 1; padding: 14px 20px 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-thumb { background: #D4D7DC; border-radius: 2px; }
+  .page-head { display: flex; align-items: center; gap: 12px; }
+  .focus-title { font-size: 18px; font-weight: 600; }
+  .focus-sub { font-size: 12px; color: #686D76; }
+  .roster-note { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: #F0F1F2; color: #686D76; }
+  .metric-strip { display: flex; gap: 10px; }
+  .metric { flex: 1; background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 8px; padding: 9px 14px; display: flex; align-items: baseline; justify-content: space-between; }
+  .metric .m-label { font-size: 12px; color: #686D76; }
+  .metric .m-value { font-size: 19px; font-weight: 600; }
+  .metric .m-value.hot { color: #E76852; }
+  .dept { margin-top: 4px; }
+  .dept-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .dept-name { font-size: 14px; font-weight: 600; }
+  .dept-count { font-size: 12px; color: #686D76; }
+  .emp-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .emp-card { flex: 1 1 288px; max-width: 360px; min-width: 0; background: #fff; border: 1px solid #E2E4E8; border-radius: 8px; padding: 12px 14px; }
+  .emp-top { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 600; flex-shrink: 0; }
+  .av-coral { background: linear-gradient(135deg, #E76852, #EF9A86); }
+  .av-blue { background: linear-gradient(135deg, #3677A8, #6FA3C6); }
+  .av-green { background: linear-gradient(135deg, #2F8F63, #6FBC96); }
+  .av-amber { background: linear-gradient(135deg, #B7791F, #D9A84C); }
+  .emp-name { font-size: 14px; font-weight: 600; }
+  .emp-role { font-size: 11px; color: #686D76; margin-top: 1px; }
+  .emp-status { margin-left: auto; font-size: 11px; padding: 3px 9px; border-radius: 10px; flex-shrink: 0; }
+  .st-online { background: rgba(47,143,99,0.12); color: #2F8F63; }
+  .st-busy { background: rgba(183,121,31,0.12); color: #B7791F; }
+  .st-idle { background: #F0F1F2; color: #686D76; }
+  .emp-engine { margin-top: 8px; font-size: 11px; color: #686D76; display: flex; gap: 6px; align-items: center; }
+  .engine-chip { background: #F0F1F2; border-radius: 4px; padding: 1px 8px; font-family: SFMono-Regular, Consolas, monospace; font-size: 10.5px; color: #4B5563; }
+  .emp-duty { margin-top: 6px; font-size: 12px; color: #4B5563; line-height: 1.5; }
+  .emp-task { margin-top: 8px; background: #FAFBFC; border: 1px solid #F0F1F2; border-radius: 6px; padding: 7px 9px; font-size: 11.5px; color: #202124; display: flex; gap: 6px; align-items: center; }
+  .emp-task .running { width: 6px; height: 6px; background: #E76852; border-radius: 50%; flex-shrink: 0; }
+  .emp-task .none { width: 6px; height: 6px; background: #D4D7DC; border-radius: 50%; flex-shrink: 0; }
+  .emp-stats { margin-top: 8px; display: flex; gap: 6px; }
+  .stat-cell { flex: 1; background: #F7F8F9; border-radius: 6px; padding: 5px 8px; text-align: center; }
+  .stat-cell .v { font-size: 13px; font-weight: 600; }
+  .stat-cell .l { font-size: 10px; color: #9AA0A6; margin-top: 1px; }
+  .emp-last { margin-top: 7px; font-size: 10.5px; color: #9AA0A6; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><div class="logo-badge">千</div><div class="logo-name">千容AI工作台</div></div>
+    <div class="nav-group"><div class="nav-group-title">日常</div><a class="nav-item" href="index.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>日常仪表盘</a></div>
+    <div class="nav-group">
+      <div class="nav-group-title">运营</div>
+      <a class="nav-item" href="radar-monitoring.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>雷达监控</a>
+      <a class="nav-item" href="topics.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>内容选题</a>
+      <a class="nav-item" href="production-studio.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>生产工作室</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">工具</div>
+      <a class="nav-item active" href="ai-employees.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c1-4 3.5-5.5 6-5.5s5 1.5 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 15c1.5-.6 3-.3 4 1"/></svg>AI 员工</a>
+      <a class="nav-item" href="knowledge-library.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>知识库</a>
+      <a class="nav-item" href="data-retro.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>数据复盘</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">系统</div>
+      <a class="nav-item" href="settings.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2-1.2L14.2 3h-4L9.5 5.7a7 7 0 00-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1c.6.5 1.3.9 2 1.2L10.2 21h4l.3-2.7a7 7 0 002-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>设置</a>
+      <a class="nav-item" href="system-logs.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>系统日志</a>
+    </div>
+    <div class="sidebar-foot"><div class="local-state"><span class="dot"></span>本地模式 · 未连接</div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">AI 员工</div>
+      <div class="update-time">更新于 09:41</div>
+      <div class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>搜索员工、职责、引擎…</span></div>
+      <div class="top-right">
+        <div class="task-state"><span class="dot"></span>运行中 · 3</div>
+        <div class="sys-exception"><span class="dot"></span>系统异常</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <div class="focus-title">AI 员工</div>
+        <div class="focus-sub">本地智能体名册 · 只读视图</div>
+        <span class="roster-note">名册为只读，不暴露对话记录与密钥</span>
+      </div>
+
+      <div class="metric-strip">
+        <div class="metric"><span class="m-label">员工总数</span><span class="m-value num">7</span></div>
+        <div class="metric"><span class="m-label">在线</span><span class="m-value num">5</span></div>
+        <div class="metric"><span class="m-label">执行中</span><span class="m-value num hot">2</span></div>
+        <div class="metric"><span class="m-label">今日执行</span><span class="m-value num">36</span></div>
+      </div>
+
+      <div class="dept">
+        <div class="dept-head"><span class="dept-name">内容组</span><span class="dept-count num">3 人</span></div>
+        <div class="emp-grid">
+          <div class="emp-card">
+            <div class="emp-top"><div class="avatar av-coral">选</div><div><div class="emp-name">选题官</div><div class="emp-role">内容 · 选题与热榜分析</div></div><span class="emp-status st-online">在线</span></div>
+            <div class="emp-engine">引擎 <span class="engine-chip">qianrong-vision-1</span></div>
+            <div class="emp-duty">负责雷达信号筛选、选题建议与热点趋势分析。</div>
+            <div class="emp-task"><span class="running"></span>正在分析「AI 写作」话题热度</div>
+            <div class="emp-stats"><div class="stat-cell"><div class="v num">8</div><div class="l">今日</div></div><div class="stat-cell"><div class="v num">42</div><div class="l">7 日</div></div><div class="stat-cell"><div class="v num">518</div><div class="l">累计</div></div><div class="stat-cell"><div class="v num">96%</div><div class="l">成功率</div></div></div>
+            <div class="emp-last">最近活跃：刚刚</div>
+          </div>
+          <div class="emp-card">
+            <div class="emp-top"><div class="avatar av-blue">写</div><div><div class="emp-name">内容写手</div><div class="emp-role">内容 · 稿件生成与改写</div></div><span class="emp-status st-online">在线</span></div>
+            <div class="emp-engine">引擎 <span class="engine-chip">qianrong-write-2</span></div>
+            <div class="emp-duty">负责生产工作室的初稿生成、AI 修订与多平台改写。</div>
+            <div class="emp-task"><span class="running"></span>修订「AI 写作实测」草稿</div>
+            <div class="emp-stats"><div class="stat-cell"><div class="v num">14</div><div class="l">今日</div></div><div class="stat-cell"><div class="v num">76</div><div class="l">7 日</div></div><div class="stat-cell"><div class="v num">920</div><div class="l">累计</div></div><div class="stat-cell"><div class="v num">93%</div><div class="l">成功率</div></div></div>
+            <div class="emp-last">最近活跃：2 分钟前</div>
+          </div>
+          <div class="emp-card">
+            <div class="emp-top"><div class="avatar av-green">校</div><div><div class="emp-name">校对员</div><div class="emp-role">内容 · 事实与错别字校验</div></div><span class="emp-status st-idle">空闲</span></div>
+            <div class="emp-engine">引擎 <span class="engine-chip">qianrong-check-1</span></div>
+            <div class="emp-duty">负责发布前的错别字、事实性与合规检查。</div>
+            <div class="emp-task"><span class="none"></span>等待任务</div>
+            <div class="emp-stats"><div class="stat-cell"><div class="v num">6</div><div class="l">今日</div></div><div class="stat-cell"><div class="v num">31</div><div class="l">7 日</div></div><div class="stat-cell"><div class="v num">402</div><div class="l">累计</div></div><div class="stat-cell"><div class="v num">99%</div><div class="l">成功率</div></div></div>
+            <div class="emp-last">最近活跃：18 分钟前</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dept">
+        <div class="dept-head"><span class="dept-name">数据组</span><span class="dept-count num">2 人</span></div>
+        <div class="emp-grid">
+          <div class="emp-card">
+            <div class="emp-top"><div class="avatar av-amber">雷</div><div><div class="emp-name">雷达分析师</div><div class="emp-role">数据 · 信号扫描与趋势建模</div></div><span class="emp-status st-busy">执行中</span></div>
+            <div class="emp-engine">引擎 <span class="engine-chip">qianrong-radar-1</span></div>
+            <div class="emp-duty">每 15 分钟扫描平台信号，输出优先级提醒与热榜。</div>
+            <div class="emp-task"><span class="running"></span>扫描小红书 09:45 批次</div>
+            <div class="emp-stats"><div class="stat-cell"><div class="v num">12</div><div class="l">今日</div></div><div class="stat-cell"><div class="v num">84</div><div class="l">7 日</div></div><div class="stat-cell"><div class="v num">1205</div><div class="l">累计</div></div><div class="stat-cell"><div class="v num">98%</div><div class="l">成功率</div></div></div>
+            <div class="emp-last">最近活跃：刚刚</div>
+          </div>
+          <div class="emp-card">
+            <div class="emp-top"><div class="avatar av-green">复</div><div><div class="emp-name">复盘师</div><div class="emp-role">数据 · 复盘报告生成</div></div><span class="emp-status st-online">在线</span></div>
+            <div class="emp-engine">引擎 <span class="engine-chip">qianrong-retro-1</span></div>
+            <div class="emp-duty">导入表现数据后生成周报、月报与行动建议。</div>
+            <div class="emp-task"><span class="none"></span>等待新数据导入</div>
+            <div class="emp-stats"><div class="stat-cell"><div class="v num">2</div><div class="l">今日</div></div><div class="stat-cell"><div class="v num">9</div><div class="l">7 日</div></div><div class="stat-cell"><div class="v num">87</div><div class="l">累计</div></div><div class="stat-cell"><div class="v num">97%</div><div class="l">成功率</div></div></div>
+            <div class="emp-last">最近活跃：6 分钟前</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dept">
+        <div class="dept-head"><span class="dept-name">系统组</span><span class="dept-count num">2 人</span></div>
+        <div class="emp-grid">
+          <div class="emp-card">
+            <div class="emp-top"><div class="avatar av-blue">运</div><div><div class="emp-name">运维助手</div><div class="emp-role">系统 · 健康检查与异常告警</div></div><span class="emp-status st-online">在线</span></div>
+            <div class="emp-engine">引擎 <span class="engine-chip">qianrong-ops-1</span></div>
+            <div class="emp-duty">监控数据库、任务队列与外部连接健康状态。</div>
+            <div class="emp-task"><span class="none"></span>例行巡检中（每 5 分钟）</div>
+            <div class="emp-stats"><div class="stat-cell"><div class="v num">24</div><div class="l">今日</div></div><div class="stat-cell"><div class="v num">168</div><div class="l">7 日</div></div><div class="stat-cell"><div class="v num">2010</div><div class="l">累计</div></div><div class="stat-cell"><div class="v num">99%</div><div class="l">成功率</div></div></div>
+            <div class="emp-last">最近活跃：1 分钟前</div>
+          </div>
+          <div class="emp-card">
+            <div class="emp-top"><div class="avatar av-coral">调</div><div><div class="emp-name">调度助手</div><div class="emp-role">系统 · 任务编排与队列管理</div></div><span class="emp-status st-busy">执行中</span></div>
+            <div class="emp-engine">引擎 <span class="engine-chip">qianrong-sched-1</span></div>
+            <div class="emp-duty">编排采集、生产、复盘的自动化任务队列。</div>
+            <div class="emp-task"><span class="running"></span>重排「本地探店」采集队列</div>
+            <div class="emp-stats"><div class="stat-cell"><div class="v num">31</div><div class="l">今日</div></div><div class="stat-cell"><div class="v num">204</div><div class="l">7 日</div></div><div class="stat-cell"><div class="v num">3104</div><div class="l">累计</div></div><div class="stat-cell"><div class="v num">98%</div><div class="l">成功率</div></div></div>
+            <div class="emp-last">最近活跃：刚刚</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

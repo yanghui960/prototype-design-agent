@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>千容AI工作台 · 数据复盘</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F6F7; color: #202124; font-size: 13px; display: flex; }
+  .num { font-family: SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .app { display: flex; width: 1440px; height: 900px; }
+  a { text-decoration: none; color: inherit; }
+
+  .sidebar { width: 232px; background: #F0F1F2; border-right: 1px solid #E2E4E8; padding: 16px 10px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 4px 8px 16px; }
+  .logo-badge { width: 26px; height: 26px; background: #E76852; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; }
+  .logo-name { font-size: 14px; font-weight: 600; }
+  .nav-group { margin-bottom: 14px; }
+  .nav-group-title { font-size: 11px; color: #686D76; padding: 6px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; color: #202124; font-size: 13px; position: relative; }
+  .nav-item:hover { background: rgba(0,0,0,0.04); }
+  .nav-item .ic { width: 16px; height: 16px; color: #686D76; flex-shrink: 0; }
+  .nav-item.active { background: rgba(231,104,82,0.12); }
+  .nav-item.active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: #E76852; border-radius: 2px; }
+  .nav-item.active .ic { color: #E76852; }
+  .sidebar-foot { margin-top: auto; border-top: 1px solid #E2E4E8; padding: 12px 10px 4px; }
+  .local-state { font-size: 11px; color: #686D76; display: flex; align-items: center; gap: 6px; }
+  .local-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 52px; background: #FFFFFF; border-bottom: 1px solid #E2E4E8; display: flex; align-items: center; padding: 0 20px; gap: 14px; }
+  .page-title { font-size: 16px; font-weight: 600; }
+  .update-time { font-size: 12px; color: #686D76; }
+  .search { flex: 1; max-width: 340px; margin-left: 24px; display: flex; align-items: center; background: #F5F6F7; border: 1px solid #E2E4E8; border-radius: 6px; padding: 6px 10px; gap: 6px; color: #9AA0A6; font-size: 12px; }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .task-state { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .task-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+  .sys-exception { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #C84B45; }
+  .sys-exception .dot { width: 6px; height: 6px; background: #C84B45; border-radius: 50%; }
+
+  .content { flex: 1; padding: 14px 20px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .page-head { display: flex; align-items: center; gap: 12px; }
+  .focus-title { font-size: 18px; font-weight: 600; }
+  .focus-sub { font-size: 12px; color: #686D76; }
+  .sample-tag { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: #F0F1F2; color: #686D76; }
+
+  .metric-strip { display: flex; gap: 10px; }
+  .metric { flex: 1; background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 8px; padding: 9px 14px; display: flex; align-items: baseline; justify-content: space-between; }
+  .metric .m-label { font-size: 12px; color: #686D76; }
+  .metric .m-value { font-size: 19px; font-weight: 600; }
+  .metric .m-value.hot { color: #E76852; }
+  .metric .m-delta { font-size: 11px; margin-left: 6px; }
+  .up { color: #2F8F63; }
+  .down { color: #C84B45; }
+
+  .retro-mid { display: flex; gap: 12px; flex: 1; min-height: 0; }
+
+  /* 左：设置面板 */
+  .setup { width: 250px; flex-shrink: 0; background: #fff; border: 1px solid #E2E4E8; border-radius: 8px; display: flex; flex-direction: column; }
+  .setup-head { padding: 11px 14px 9px; border-bottom: 1px solid #F0F1F2; font-size: 14px; font-weight: 600; }
+  .setup-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  .setup-body::-webkit-scrollbar { width: 4px; }
+  .setup-body::-webkit-scrollbar-thumb { background: #D4D7DC; border-radius: 2px; }
+  .s-label { font-size: 12px; color: #686D76; margin-bottom: 6px; }
+  .s-options { display: flex; flex-direction: column; gap: 7px; }
+  .s-opt { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .s-ckb { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid #B9BEC6; position: relative; flex-shrink: 0; }
+  .s-ckb.on { background: #E76852; border-color: #E76852; }
+  .s-ckb.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .s-range { background: #F5F6F7; border: 1px solid #E2E4E8; border-radius: 6px; padding: 7px 10px; font-size: 12px; color: #202124; }
+  .file-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #F5F6F7; font-size: 12px; }
+  .file-item:last-child { border-bottom: none; }
+  .file-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-ok { color: #2F8F63; font-size: 11px; flex-shrink: 0; }
+  .setup-foot { margin-top: auto; padding: 12px 14px; border-top: 1px solid #F0F1F2; display: flex; flex-direction: column; gap: 8px; }
+  .btn { padding: 8px 0; border-radius: 6px; font-size: 13px; text-align: center; border: 1px solid #E2E4E8; background: #fff; color: #202124; cursor: pointer; }
+  .btn.primary { background: #E76852; border-color: #E76852; color: #fff; }
+
+  /* 中：当前报告 */
+  .report { flex: 1.4; background: #fff; border: 1px solid #E2E4E8; border-radius: 8px; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .report-head { padding: 11px 16px 9px; border-bottom: 1px solid #F0F1F2; display: flex; align-items: center; }
+  .report-title { font-size: 14px; font-weight: 600; }
+  .report-meta { font-size: 11.5px; color: #9AA0A6; margin-left: 10px; }
+  .report-actions { margin-left: auto; display: flex; gap: 8px; font-size: 12px; color: #3677A8; }
+  .report-body { padding: 12px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .report-body::-webkit-scrollbar { width: 4px; }
+  .report-body::-webkit-scrollbar-thumb { background: #D4D7DC; border-radius: 2px; }
+  .r-overview { display: flex; gap: 10px; }
+  .r-ov-item { flex: 1; border: 1px solid #E2E4E8; border-radius: 8px; padding: 8px 12px; }
+  .r-ov-label { font-size: 11px; color: #686D76; }
+  .r-ov-value { font-size: 17px; font-weight: 600; margin-top: 2px; }
+  .r-section-title { font-size: 12.5px; font-weight: 600; color: #202124; display: flex; align-items: center; gap: 6px; }
+  .r-section-title .mark { width: 8px; height: 8px; border-radius: 2px; }
+  .mark.green { background: #2F8F63; }
+  .mark.amber { background: #B7791F; }
+  .mark.blue { background: #3677A8; }
+  .r-list { display: flex; flex-direction: column; gap: 7px; margin-top: 6px; }
+  .r-item { display: flex; gap: 8px; font-size: 12.5px; color: #4B5563; line-height: 1.55; }
+  .r-item .dot { width: 5px; height: 5px; background: #C2C6CC; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
+  .r-item .hl { color: #202124; font-weight: 500; }
+
+  /* 右：历史报告 */
+  .history { width: 246px; flex-shrink: 0; background: #fff; border: 1px solid #E2E4E8; border-radius: 8px; display: flex; flex-direction: column; }
+  .history-head { padding: 11px 14px 9px; border-bottom: 1px solid #F0F1F2; font-size: 14px; font-weight: 600; display: flex; align-items: center; }
+  .history-count { margin-left: 8px; font-size: 12px; color: #686D76; font-weight: 400; }
+  .history-body { padding: 6px 14px; overflow-y: auto; display: flex; flex-direction: column; }
+  .history-body::-webkit-scrollbar { width: 4px; }
+  .history-body::-webkit-scrollbar-thumb { background: #D4D7DC; border-radius: 2px; }
+  .h-item { padding: 9px 0; border-bottom: 1px solid #F5F6F7; cursor: pointer; }
+  .h-item:last-child { border-bottom: none; }
+  .h-item.active .h-title { color: #E76852; }
+  .h-date { font-size: 11px; color: #9AA0A6; }
+  .h-title { font-size: 12.5px; font-weight: 500; margin-top: 2px; }
+  .h-status { font-size: 11px; color: #686D76; margin-top: 3px; display: flex; gap: 8px; }
+  .h-status .ok { color: #2F8F63; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 侧栏 -->
+  <aside class="sidebar">
+    <div class="logo"><div class="logo-badge">千</div><div class="logo-name">千容AI工作台</div></div>
+    <div class="nav-group">
+      <div class="nav-group-title">日常</div>
+      <a class="nav-item" href="index.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>日常仪表盘</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">运营</div>
+      <a class="nav-item" href="radar-monitoring.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>雷达监控</a>
+      <a class="nav-item" href="topics.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>内容选题</a>
+      <a class="nav-item" href="production-studio.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>生产工作室</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">工具</div>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c1-4 3.5-5.5 6-5.5s5 1.5 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 15c1.5-.6 3-.3 4 1"/></svg>AI 员工</a>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>知识库</a>
+      <a class="nav-item active" href="data-retro.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>数据复盘</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">系统</div>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2-1.2L14.2 3h-4L9.5 5.7a7 7 0 00-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1c.6.5 1.3.9 2 1.2L10.2 21h4l.3-2.7a7 7 0 002-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>设置</a>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>系统日志</a>
+    </div>
+    <div class="sidebar-foot"><div class="local-state"><span class="dot"></span>本地模式 · 未连接</div></div>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">数据复盘</div>
+      <div class="update-time">更新于 09:38</div>
+      <div class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>搜索历史报告、指标…</span></div>
+      <div class="top-right">
+        <div class="task-state"><span class="dot"></span>运行中 · 3</div>
+        <div class="sys-exception"><span class="dot"></span>系统异常</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <div class="focus-title">数据复盘</div>
+        <div class="focus-sub">导入真实表现数据，生成可执行的复盘报告</div>
+        <span class="sample-tag">示例数据 · 用于展示结构</span>
+      </div>
+
+      <div class="metric-strip">
+        <div class="metric"><span class="m-label">本周发布</span><span class="m-value num">12</span><span class="m-delta up num">+2</span></div>
+        <div class="metric"><span class="m-label">总阅读</span><span class="m-value num">2.4万</span><span class="m-delta up num">+18%</span></div>
+        <div class="metric"><span class="m-label">总互动</span><span class="m-value num">1,280</span><span class="m-delta up num">+24%</span></div>
+        <div class="metric"><span class="m-label">平均互动率</span><span class="m-value num hot">5.3%</span><span class="m-delta up num">+0.8pt</span></div>
+      </div>
+
+      <div class="retro-mid">
+        <!-- 左：设置面板 -->
+        <div class="setup">
+          <div class="setup-head">导入与设置</div>
+          <div class="setup-body">
+            <div>
+              <div class="s-label">数据源平台</div>
+              <div class="s-options">
+                <div class="s-opt"><span class="s-ckb on"></span>小红书</div>
+                <div class="s-opt"><span class="s-ckb on"></span>公众号</div>
+                <div class="s-opt"><span class="s-ckb on"></span>视频号</div>
+                <div class="s-opt"><span class="s-ckb"></span>抖音</div>
+              </div>
+            </div>
+            <div>
+              <div class="s-label">统计周期</div>
+              <div class="s-range">09-01 至 09-07（本周）</div>
+            </div>
+            <div>
+              <div class="s-label">已导入数据（3 个文件）</div>
+              <div class="file-item"><span class="file-name">xhs_export_0907.csv</span><span class="file-ok">✓</span></div>
+              <div class="file-item"><span class="file-name">gzh_export_0907.csv</span><span class="file-ok">✓</span></div>
+              <div class="file-item"><span class="file-name">shipinhao_0907.xlsx</span><span class="file-ok">✓</span></div>
+            </div>
+          </div>
+          <div class="setup-foot">
+            <div class="btn">重新导入</div>
+            <div class="btn primary">生成报告</div>
+          </div>
+        </div>
+
+        <!-- 中：当前报告 -->
+        <div class="report">
+          <div class="report-head">
+            <span class="report-title">本周复盘报告</span>
+            <span class="report-meta">生成于 09-07 09:36 · 基于 3 份导入数据</span>
+            <div class="report-actions"><span>导出</span><span>重新生成</span></div>
+          </div>
+          <div class="report-body">
+            <div class="r-overview">
+              <div class="r-ov-item"><div class="r-ov-label">最优平台</div><div class="r-ov-value" style="color:#E76852;">小红书</div></div>
+              <div class="r-ov-item"><div class="r-ov-label">最优内容类型</div><div class="r-ov-value">实测类</div></div>
+              <div class="r-ov-item"><div class="r-ov-label">最优话题</div><div class="r-ov-value" style="font-size:14px;">AI 写作</div></div>
+              <div class="r-ov-item"><div class="r-ov-label">最高互动率</div><div class="r-ov-value num">7.9%</div></div>
+            </div>
+            <div>
+              <div class="r-section-title"><span class="mark green"></span>本周亮点</div>
+              <div class="r-list">
+                <div class="r-item"><span class="dot"></span><span><span class="hl">「实测」类内容互动率 7.9%</span>，为全站均值（5.3%）的 1.5 倍，建议下周加量</span></div>
+                <div class="r-item"><span class="dot"></span><span>小红书渠道贡献 <span class="hl">62% 阅读</span>，发布时间段 11:00-13:00 表现最佳</span></div>
+                <div class="r-item"><span class="dot"></span><span>AI 写作话题连续 2 周进入雷达热榜，内容供需缺口仍在</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="r-section-title"><span class="mark amber"></span>需要关注</div>
+              <div class="r-list">
+                <div class="r-item"><span class="dot"></span><span>视频号平均互动率 <span class="hl">2.1%</span>，低于 4% 基线，封面与标题匹配度待优化</span></div>
+                <div class="r-item"><span class="dot"></span><span>「纯测评类」内容完读率偏低（38%），开头 3 秒钩子不足</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="r-section-title"><span class="mark blue"></span>下一步行动</div>
+              <div class="r-list">
+                <div class="r-item"><span class="dot"></span><span>下周生产计划：<span class="hl">8 篇实测类</span> + 4 篇避坑类，覆盖 AI 写作 / 选品 / 本地探店</span></div>
+                <div class="r-item"><span class="dot"></span><span>将「11:00-13:00 发布」写入生产工作室默认发布时段</span></div>
+                <div class="r-item"><span class="dot"></span><span>视频号封面改用大字报模板，下周三复盘验证</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右：历史报告 -->
+        <div class="history">
+          <div class="history-head">历史报告<span class="history-count num">8</span></div>
+          <div class="history-body">
+            <div class="h-item active"><div class="h-date num">09-07 · 本周</div><div class="h-title">本周复盘报告</div><div class="h-status"><span class="ok">已生成</span><span>09:36</span></div></div>
+            <div class="h-item"><div class="h-date num">08-31 · 上周</div><div class="h-title">上周复盘报告</div><div class="h-status"><span class="ok">已生成</span></div></div>
+            <div class="h-item"><div class="h-date num">08-24 · 上周</div><div class="h-title">内容周报</div><div class="h-status"><span class="ok">已生成</span></div></div>
+            <div class="h-item"><div class="h-date num">08-17 · 上周</div><div class="h-title">内容周报</div><div class="h-status"><span class="ok">已生成</span></div></div>
+            <div class="h-item"><div class="h-date num">08-01 · 月报</div><div class="h-title">7 月月度复盘</div><div class="h-status"><span class="ok">已生成</span></div></div>
+            <div class="h-item"><div class="h-date num">07-01 · 月报</div><div class="h-title">6 月月度复盘</div><div class="h-status"><span>归档</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>(function(){ var items=document.querySelectorAll('.h-item'); items.forEach(function(it){ it.addEventListener('click',function(){ items.forEach(function(x){x.classList.remove('active');}); it.classList.add('active'); }); }); })();</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>千容AI工作台 · 系统日志</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F6F7; color: #202124; font-size: 13px; display: flex; }
+  .num { font-family: SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .app { display: flex; width: 1440px; height: 900px; }
+  a { text-decoration: none; color: inherit; }
+  .sidebar { width: 232px; background: #F0F1F2; border-right: 1px solid #E2E4E8; padding: 16px 10px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 4px 8px 16px; }
+  .logo-badge { width: 26px; height: 26px; background: #E76852; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; }
+  .logo-name { font-size: 14px; font-weight: 600; }
+  .nav-group { margin-bottom: 14px; }
+  .nav-group-title { font-size: 11px; color: #686D76; padding: 6px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; color: #202124; font-size: 13px; position: relative; }
+  .nav-item:hover { background: rgba(0,0,0,0.04); }
+  .nav-item .ic { width: 16px; height: 16px; color: #686D76; flex-shrink: 0; }
+  .nav-item.active { background: rgba(231,104,82,0.12); }
+  .nav-item.active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: #E76852; border-radius: 2px; }
+  .nav-item.active .ic { color: #E76852; }
+  .sidebar-foot { margin-top: auto; border-top: 1px solid #E2E4E8; padding: 12px 10px 4px; }
+  .local-state { font-size: 11px; color: #686D76; display: flex; align-items: center; gap: 6px; }
+  .local-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 52px; background: #FFFFFF; border-bottom: 1px solid #E2E4E8; display: flex; align-items: center; padding: 0 20px; gap: 14px; }
+  .page-title { font-size: 16px; font-weight: 600; }
+  .update-time { font-size: 12px; color: #686D76; }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .task-state { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .task-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+  .sys-exception { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #C84B45; }
+  .sys-exception .dot { width: 6px; height: 6px; background: #C84B45; border-radius: 50%; }
+  .content { flex: 1; padding: 14px 20px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .page-head { display: flex; align-items: center; gap: 12px; }
+  .focus-title { font-size: 18px; font-weight: 600; }
+  .focus-sub { font-size: 12px; color: #686D76; }
+  .metric-strip { display: flex; gap: 10px; }
+  .metric { flex: 1; background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 8px; padding: 9px 14px; display: flex; align-items: baseline; justify-content: space-between; }
+  .metric .m-label { font-size: 12px; color: #686D76; }
+  .metric .m-value { font-size: 19px; font-weight: 600; }
+  .metric .m-value.red { color: #C84B45; }
+  .metric .m-value.amber { color: #B7791F; }
+  .filter-bar { display: flex; gap: 8px; align-items: center; }
+  .f-chip { font-size: 12px; padding: 5px 14px; border-radius: 16px; background: #fff; border: 1px solid #E2E4E8; color: #686D76; cursor: pointer; }
+  .f-chip.active { background: rgba(231,104,82,0.12); border-color: #E76852; color: #B34B3A; font-weight: 500; }
+  .f-select { font-size: 12px; padding: 5px 12px; border-radius: 6px; background: #fff; border: 1px solid #E2E4E8; color: #686D76; }
+  .log-card { flex: 1; background: #fff; border: 1px solid #E2E4E8; border-radius: 8px; display: flex; flex-direction: column; min-height: 0; }
+  .log-head { padding: 10px 16px 8px; border-bottom: 1px solid #F0F1F2; display: flex; align-items: center; }
+  .log-title { font-size: 14px; font-weight: 600; }
+  .log-count { margin-left: 8px; font-size: 12px; color: #686D76; }
+  .log-actions { margin-left: auto; display: flex; gap: 12px; font-size: 12px; color: #3677A8; }
+  .log-body { flex: 1; overflow-y: auto; min-height: 0; }
+  .log-body::-webkit-scrollbar { width: 5px; }
+  .log-body::-webkit-scrollbar-thumb { background: #D4D7DC; border-radius: 2px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; color: #686D76; font-weight: 500; padding: 7px 16px; border-bottom: 1px solid #E2E4E8; background: #FAFBFC; }
+  td { font-size: 12.5px; padding: 8px 16px; border-bottom: 1px solid #F5F6F7; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .lv { display: flex; align-items: center; gap: 6px; }
+  .lv-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .lv-err { color: #C84B45; }
+  .lv-err .lv-dot { background: #C84B45; }
+  .lv-warn { color: #B7791F; }
+  .lv-warn .lv-dot { background: #B7791F; }
+  .lv-info { color: #3677A8; }
+  .lv-info .lv-dot { background: #3677A8; }
+  .lv-ok { color: #2F8F63; }
+  .lv-ok .lv-dot { background: #2F8F63; }
+  .mod { font-family: SFMono-Regular, Consolas, monospace; font-size: 11.5px; color: #4B5563; }
+  .msg { color: #202124; }
+  .cost { color: #9AA0A6; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><div class="logo-badge">千</div><div class="logo-name">千容AI工作台</div></div>
+    <div class="nav-group"><div class="nav-group-title">日常</div><a class="nav-item" href="index.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>日常仪表盘</a></div>
+    <div class="nav-group">
+      <div class="nav-group-title">运营</div>
+      <a class="nav-item" href="radar-monitoring.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>雷达监控</a>
+      <a class="nav-item" href="topics.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>内容选题</a>
+      <a class="nav-item" href="production-studio.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>生产工作室</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">工具</div>
+      <a class="nav-item" href="ai-employees.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c1-4 3.5-5.5 6-5.5s5 1.5 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 15c1.5-.6 3-.3 4 1"/></svg>AI 员工</a>
+      <a class="nav-item" href="knowledge-library.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>知识库</a>
+      <a class="nav-item" href="data-retro.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>数据复盘</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">系统</div>
+      <a class="nav-item" href="settings.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2-1.2L14.2 3h-4L9.5 5.7a7 7 0 00-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1c.6.5 1.3.9 2 1.2L10.2 21h4l.3-2.7a7 7 0 002-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>设置</a>
+      <a class="nav-item active" href="system-logs.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>系统日志</a>
+    </div>
+    <div class="sidebar-foot"><div class="local-state"><span class="dot"></span>本地模式 · 未连接</div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">系统日志</div>
+      <div class="update-time">更新于 09:43</div>
+      <div class="top-right">
+        <div class="task-state"><span class="dot"></span>运行中 · 3</div>
+        <div class="sys-exception"><span class="dot"></span>系统异常</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <div class="focus-title">系统日志</div>
+        <div class="focus-sub">任务执行与系统健康记录</div>
+      </div>
+
+      <div class="metric-strip">
+        <div class="metric"><span class="m-label">今日日志</span><span class="m-value num">186</span></div>
+        <div class="metric"><span class="m-label">错误</span><span class="m-value num red">1</span></div>
+        <div class="metric"><span class="m-label">警告</span><span class="m-value num amber">7</span></div>
+        <div class="metric"><span class="m-label">平均耗时</span><span class="m-value num">1.2s</span></div>
+      </div>
+
+      <div class="filter-bar">
+        <span class="f-chip active">全部</span>
+        <span class="f-chip">错误</span>
+        <span class="f-chip">警告</span>
+        <span class="f-chip">信息</span>
+        <span class="f-select">全部模块 ▾</span>
+        <span class="f-select">今天 ▾</span>
+      </div>
+
+      <div class="log-card">
+        <div class="log-head"><span class="log-title">运行日志</span><span class="log-count num">186 条</span><div class="log-actions"><span>自动刷新</span><span>导出</span><span>清空</span></div></div>
+        <div class="log-body">
+          <table>
+            <tr><th style="width:110px;">时间</th><th style="width:80px;">级别</th><th style="width:150px;">模块</th><th>消息</th><th style="width:90px;">耗时</th></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:43:12</td><td><span class="lv lv-ok"><span class="lv-dot"></span>成功</span></td><td class="mod">radar.scan</td><td class="msg">小红书 09:45 批次扫描完成，捕获信号 12 条</td><td class="cost num">0.8s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:42:47</td><td><span class="lv lv-err"><span class="lv-dot"></span>错误</span></td><td class="mod">db.conn</td><td class="msg">数据库连接超时（1200ms &gt; 阈值 800ms），已自动重连</td><td class="cost num">1.2s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:42:10</td><td><span class="lv lv-warn"><span class="lv-dot"></span>警告</span></td><td class="mod">schedule.queue</td><td class="msg">「本地探店」采集队列重排完成，等待任务 3 个</td><td class="cost num">0.4s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:41:38</td><td><span class="lv lv-ok"><span class="lv-dot"></span>成功</span></td><td class="mod">studio.revise</td><td class="msg">AI 修订完成：标题优化 1 条、开头钩子 1 条已应用</td><td class="cost num">6.5s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:40:55</td><td><span class="lv lv-info"><span class="lv-dot"></span>信息</span></td><td class="mod">retro.import</td><td class="msg">已导入 3 份数据文件（xhs / gzh / shipinhao）</td><td class="cost num">0.3s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:38:02</td><td><span class="lv lv-warn"><span class="lv-dot"></span>警告</span></td><td class="mod">obsidian.sync</td><td class="msg">Obsidian 索引延迟 2 分钟，文件数 6 未变化</td><td class="cost num">0.2s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:36:44</td><td><span class="lv lv-ok"><span class="lv-dot"></span>成功</span></td><td class="mod">retro.report</td><td class="msg">本周复盘报告生成完成，共 3 个结论区块</td><td class="cost num">4.1s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:35:20</td><td><span class="lv lv-info"><span class="lv-dot"></span>信息</span></td><td class="mod">studio.save</td><td class="msg">草稿「AI 写作实测」自动保存</td><td class="cost num">0.1s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:32:15</td><td><span class="lv lv-ok"><span class="lv-dot"></span>成功</span></td><td class="mod">topic.insight</td><td class="msg">洞察报告生成：AI 写作助手（高相关 6 条）</td><td class="cost num">3.2s</td></tr>
+            <tr><td class="num" style="color:#9AA0A6;">09:30:00</td><td><span class="lv lv-info"><span class="lv-dot"></span>信息</span></td><td class="mod">radar.tick</td><td class="msg">雷达定时扫描启动（周期 15 分钟）</td><td class="cost num">0.1s</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>(function(){ var chips=document.querySelectorAll('.f-chip'); chips.forEach(function(c){c.addEventListener('click',function(){chips.forEach(function(x){x.classList.remove('active');}); c.classList.add('active');});}); })();</script>
+</body>
+</html>

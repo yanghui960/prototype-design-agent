@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>千容AI工作台 · 内容选题</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F6F7; color: #202124; font-size: 13px; display: flex; }
+  .num { font-family: SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .app { display: flex; width: 1440px; height: 900px; }
+  a { text-decoration: none; color: inherit; }
+
+  .sidebar { width: 232px; background: #F0F1F2; border-right: 1px solid #E2E4E8; padding: 16px 10px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 4px 8px 16px; }
+  .logo-badge { width: 26px; height: 26px; background: #E76852; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; }
+  .logo-name { font-size: 14px; font-weight: 600; }
+  .nav-group { margin-bottom: 14px; }
+  .nav-group-title { font-size: 11px; color: #686D76; padding: 6px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; color: #202124; font-size: 13px; position: relative; }
+  .nav-item:hover { background: rgba(0,0,0,0.04); }
+  .nav-item .ic { width: 16px; height: 16px; color: #686D76; flex-shrink: 0; }
+  .nav-item.active { background: rgba(231,104,82,0.12); }
+  .nav-item.active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: #E76852; border-radius: 2px; }
+  .nav-item.active .ic { color: #E76852; }
+  .sidebar-foot { margin-top: auto; border-top: 1px solid #E2E4E8; padding: 12px 10px 4px; }
+  .local-state { font-size: 11px; color: #686D76; display: flex; align-items: center; gap: 6px; }
+  .local-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 52px; background: #FFFFFF; border-bottom: 1px solid #E2E4E8; display: flex; align-items: center; padding: 0 20px; gap: 14px; }
+  .page-title { font-size: 16px; font-weight: 600; }
+  .update-time { font-size: 12px; color: #686D76; }
+  .search { flex: 1; max-width: 340px; margin-left: 24px; display: flex; align-items: center; background: #F5F6F7; border: 1px solid #E2E4E8; border-radius: 6px; padding: 6px 10px; gap: 6px; color: #9AA0A6; font-size: 12px; }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .task-state { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .task-state .dot { width: 6px; height: 6px; background: #2F8F63; border-radius: 50%; }
+  .sys-exception { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #C84B45; }
+  .sys-exception .dot { width: 6px; height: 6px; background: #C84B45; border-radius: 50%; }
+
+  .content { flex: 1; padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+  .page-head { display: flex; align-items: center; gap: 14px; }
+  .focus-title { font-size: 18px; font-weight: 600; }
+  .focus-sub { font-size: 12px; color: #686D76; margin-top: 2px; }
+
+  .tabs { display: flex; gap: 4px; background: #ECEDEF; border-radius: 8px; padding: 3px; width: fit-content; }
+  .tab { font-size: 13px; padding: 6px 20px; border-radius: 6px; color: #686D76; cursor: pointer; }
+  .tab.active { background: #fff; color: #202124; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .tab .badge { font-size: 11px; background: rgba(231,104,82,0.12); color: #B34B3A; border-radius: 10px; padding: 1px 7px; margin-left: 4px; }
+
+  /* 输入器 */
+  .composer { background: #fff; border: 1px solid #E2E4E8; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+  .composer-input { flex: 1; background: #F5F6F7; border: 1px solid #E2E4E8; border-radius: 6px; padding: 8px 12px; color: #9AA0A6; font-size: 13px; }
+  .composer-btn { background: #E76852; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
+  .composer-quick { font-size: 12px; color: #3677A8; cursor: pointer; }
+
+  /* 采集列表 */
+  .collect-list { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; min-height: 0; }
+  .collect-list::-webkit-scrollbar { width: 4px; }
+  .collect-list::-webkit-scrollbar-thumb { background: #D4D7DC; border-radius: 2px; }
+  .c-card { background: #fff; border: 1px solid #E2E4E8; border-radius: 8px; padding: 12px 14px; display: flex; gap: 12px; cursor: pointer; }
+  .c-card.selected { border-color: #E76852; box-shadow: 0 0 0 1px #E76852; }
+  .c-icon { width: 36px; height: 36px; border-radius: 8px; background: #F0F1F2; display: flex; align-items: center; justify-content: center; color: #686D76; font-size: 15px; flex-shrink: 0; }
+  .c-icon.coral { background: rgba(231,104,82,0.12); color: #B34B3A; }
+  .c-main { flex: 1; min-width: 0; }
+  .c-title { font-size: 13.5px; font-weight: 500; }
+  .c-meta { font-size: 11.5px; color: #9AA0A6; margin-top: 3px; display: flex; gap: 10px; }
+  .c-stats { font-size: 11.5px; color: #686D76; margin-top: 5px; display: flex; gap: 14px; }
+  .c-status { flex-shrink: 0; font-size: 11px; padding: 3px 10px; border-radius: 10px; align-self: flex-start; }
+  .st-done { background: rgba(47,143,99,0.12); color: #2F8F63; }
+  .st-run { background: rgba(183,121,31,0.12); color: #B7791F; }
+  .st-idle { background: #F0F1F2; color: #686D76; }
+
+  /* 抽屉 */
+  .drawer-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.18); display: flex; justify-content: flex-end; }
+  .drawer { width: 400px; background: #fff; border-left: 1px solid #E2E4E8; display: flex; flex-direction: column; }
+  .drawer-head { padding: 14px 16px; border-bottom: 1px solid #F0F1F2; display: flex; align-items: center; }
+  .drawer-title { font-size: 15px; font-weight: 600; }
+  .drawer-close { margin-left: auto; width: 26px; height: 26px; border-radius: 6px; background: #F5F6F7; display: flex; align-items: center; justify-content: center; color: #686D76; }
+  .drawer-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+  .pick-all { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #F0F1F2; font-size: 12.5px; color: #202124; }
+  .pick-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #F5F6F7; }
+  .pick-item:last-child { border-bottom: none; }
+  .ckb { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid #B9BEC6; flex-shrink: 0; }
+  .ckb.on { background: #E76852; border-color: #E76852; position: relative; }
+  .ckb.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .pick-title { font-size: 12.5px; flex: 1; min-width: 0; }
+  .pick-tag { font-size: 10.5px; color: #3677A8; border: 1px solid rgba(54,119,168,0.3); padding: 0 6px; border-radius: 4px; flex-shrink: 0; }
+  .drawer-foot { margin-top: auto; padding: 12px 16px; border-top: 1px solid #F0F1F2; display: flex; gap: 8px; }
+  .btn { flex: 1; padding: 8px 0; border-radius: 6px; font-size: 13px; text-align: center; cursor: pointer; border: 1px solid #E2E4E8; background: #fff; color: #202124; }
+  .btn.primary { background: #E76852; border-color: #E76852; color: #fff; }
+  .btn.ghost { background: transparent; border-color: transparent; color: #3677A8; }
+</style>
+</head>
+<body>
+<div class="app" style="position:relative;">
+
+  <!-- 侧栏 -->
+  <aside class="sidebar">
+    <div class="logo"><div class="logo-badge">千</div><div class="logo-name">千容AI工作台</div></div>
+    <div class="nav-group">
+      <div class="nav-group-title">日常</div>
+      <a class="nav-item" href="index.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>日常仪表盘</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">运营</div>
+      <a class="nav-item" href="radar-monitoring.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>雷达监控</a>
+      <a class="nav-item active" href="topics.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>内容选题</a>
+      <a class="nav-item" href="production-studio.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>生产工作室</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">工具</div>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c1-4 3.5-5.5 6-5.5s5 1.5 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 15c1.5-.6 3-.3 4 1"/></svg>AI 员工</a>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>知识库</a>
+      <a class="nav-item" href="data-retro.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>数据复盘</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">系统</div>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2-1.2L14.2 3h-4L9.5 5.7a7 7 0 00-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1c.6.5 1.3.9 2 1.2L10.2 21h4l.3-2.7a7 7 0 002-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>设置</a>
+      <a class="nav-item" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>系统日志</a>
+    </div>
+    <div class="sidebar-foot"><div class="local-state"><span class="dot"></span>本地模式 · 未连接</div></div>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">内容选题</div>
+      <div class="update-time">更新于 09:32</div>
+      <div class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>搜索采集记录、洞察报告、选题…</span></div>
+      <div class="top-right">
+        <div class="task-state"><span class="dot"></span>运行中 · 3</div>
+        <div class="sys-exception"><span class="dot"></span>系统异常</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <div class="focus-title">从信号到选题</div>
+          <div class="focus-sub">采集素材 → AI 洞察 → 沉淀选题</div>
+        </div>
+        <div class="tabs">
+          <span class="tab active">采集<span class="badge num">12</span></span>
+          <span class="tab">洞察<span class="badge num">3</span></span>
+          <span class="tab">选题<span class="badge num">6</span></span>
+        </div>
+      </div>
+
+      <div class="composer">
+        <span style="font-size:13px;color:#686D76;">采集来源</span>
+        <div class="composer-input">粘贴 URL、关键词或平台链接…</div>
+        <span class="composer-quick">AI 批量采集</span>
+        <div class="composer-btn">开始采集</div>
+      </div>
+
+      <div class="collect-list">
+        <div class="c-card selected">
+          <div class="c-icon coral">📈</div>
+          <div class="c-main">
+            <div class="c-title">小红书「AI 写作助手」话题热榜采集</div>
+            <div class="c-meta"><span>小红书 · 关键词：AI写作</span><span>09:12</span></div>
+            <div class="c-stats"><span>采集 24 条</span><span>清洗后 18 条</span><span>高相关 6 条</span></div>
+          </div>
+          <div class="c-status st-done">已完成</div>
+        </div>
+        <div class="c-card">
+          <div class="c-icon">🔥</div>
+          <div class="c-main">
+            <div class="c-title">抖音「跨境电商选品」热点榜采集</div>
+            <div class="c-meta"><span>抖音 · 热点榜 TOP50</span><span>08:47</span></div>
+            <div class="c-stats"><span>采集 50 条</span><span>清洗中…</span></div>
+          </div>
+          <div class="c-status st-run">采集中</div>
+        </div>
+        <div class="c-card">
+          <div class="c-icon">📍</div>
+          <div class="c-main">
+            <div class="c-title">揭阳本地公众号文章采集（近 7 天）</div>
+            <div class="c-meta"><span>公众号 · 城市：揭阳</span><span>08:03</span></div>
+            <div class="c-stats"><span>采集 37 条</span><span>清洗后 28 条</span></div>
+          </div>
+          <div class="c-status st-done">已完成</div>
+        </div>
+        <div class="c-card">
+          <div class="c-icon">🎬</div>
+          <div class="c-main">
+            <div class="c-title">B 站「国产大模型」科技区上升视频</div>
+            <div class="c-meta"><span>B 站 · 分区：科技</span><span>07:41</span></div>
+            <div class="c-stats"><span>采集 15 条</span><span>待清洗</span></div>
+          </div>
+          <div class="c-status st-idle">待清洗</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果抽屉（打开态） -->
+  <div class="drawer-overlay">
+    <div class="drawer">
+      <div class="drawer-head"><span class="drawer-title">采集结果 · AI 写作助手</span><span class="drawer-close">×</span></div>
+      <div class="drawer-body">
+        <div class="pick-all"><span class="ckb on"></span>全选（18 条已清洗）</div>
+        <div class="pick-item"><span class="ckb on"></span><span class="pick-title">实测：AI 写作助手一天写 50 篇文案</span><span class="pick-tag">高相关</span></div>
+        <div class="pick-item"><span class="ckb on"></span><span class="pick-title">AI 写作副业月入过万是真的吗</span><span class="pick-tag">高相关</span></div>
+        <div class="pick-item"><span class="ckb on"></span><span class="pick-title">打工人用 AI 写周报的正确姿势</span><span class="pick-tag">中相关</span></div>
+        <div class="pick-item"><span class="ckb"></span><span class="pick-title">AI 写作工具大盘点（纯测评类）</span><span class="pick-tag">中相关</span></div>
+        <div class="pick-item"><span class="ckb"></span><span class="pick-title">AI 会不会取代文案编辑</span><span class="pick-tag">弱相关</span></div>
+        <div class="pick-item"><span class="ckb"></span><span class="pick-title">某平台新功能上线公告</span><span class="pick-tag">无关</span></div>
+      </div>
+      <div class="drawer-foot">
+        <div class="btn ghost">取消选择</div>
+        <div class="btn">清洗所选</div>
+        <div class="btn primary">生成洞察</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>(function(){ var tabs=document.querySelectorAll('.tab'); tabs.forEach(function(t){t.addEventListener('click',function(){tabs.forEach(function(x){x.classList.remove('active');}); t.classList.add('active');});}); var ov=document.querySelector('.drawer-overlay'), cl=document.querySelector('.drawer-close'); if(!ov)return; function closeIt(){ov.style.display='none';} if(cl)cl.addEventListener('click',closeIt); ov.addEventListener('click',function(e){if(e.target===ov)closeIt();}); })();</script>
+</body>
+</html>
