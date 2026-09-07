@@ -49,6 +49,24 @@ prototype-design-agent/
 
 若环境中有可用的设计系统类技能（如 `ui-ux-pro-max`、`ui-craft-dense-dashboard` 等）可优先组合使用；不可用时直接按 `references/` 目录执行。
 
+## 工作台演示原型（mockups/）
+
+本仓库附带「千容AI工作台」全套高保真 HTML 演示原型，打开 `mockups/index.html` 即可体验完整页面：
+
+| 页面 | 文件 | 说明 |
+| --- | --- | --- |
+| 日常仪表盘（入口） | `index.html` | 今日概览 / 待办 / 雷达机会 / 内容数据 |
+| 雷达监控 | `radar-monitoring.html` | 信号指标 / 优先级提醒 / 平台热榜 / 机会详情抽屉 |
+| 内容选题 | `topics.html` | 采集 / 洞察 / 选题 Tab、采集任务与结果抽屉 |
+| 生产工作室 | `production-studio.html` | 富文本编辑 + AI 修订建议 + 手机预览 |
+| AI 员工 | `ai-employees.html` | 本地智能体只读名册（内容 / 数据 / 系统组） |
+| 知识库 | `knowledge-library.html` | 技能 / 工具 / 文件库，接入状态分组 + 详情抽屉 |
+| 数据复盘 | `data-retro.html` | 指标条 / 导入面板 / 复盘报告 / 历史报告 |
+| 设置 | `settings.html` | 大模型配置 / 平台连接 / 系统信息 |
+| 系统日志 | `system-logs.html` | 运行日志表，级别 / 模块筛选 |
+
+每个页面同时附 1440×900 的 PNG 预览（同名文件）。页面内数据均为**示例数据**，用于展示结构与交互；侧栏全站互链，抽屉 / Tab / 筛选均可点击体验。直接用浏览器打开 `mockups/index.html` 即可，无需启动任何服务。
+
 ## 核心视觉规范速览
 
 | 项 | 值 |
