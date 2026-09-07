@@ -36,7 +36,7 @@ prototype-design-agent/
 <用户技能目录>/.user_skills/prototype-design-agent/
 ```
 
-安装后，向 AI 说「用原型设计agent，按 Mr 工作台风格生成 / 验收一张 XX 工作台界面图」即可触发。
+安装后，向 AI 说「用原型设计agent，按 千容AI 工作台风格生成 / 验收一张 XX 工作台界面图」即可触发。
 
 ## 使用方式
 
