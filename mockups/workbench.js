@@ -58,12 +58,24 @@
 
   // 待所有页面 DOM 就绪后调用；online=true 表示后端在线
   WB.ready = function (cb) {
+    function setLocalState(ok) {
+      var el = document.querySelector('.local-state');
+      if (!el) return;
+      el.innerHTML = ok
+        ? '<span class="dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2F8F63;margin-right:6px;vertical-align:1px;"></span>本地模式 · 已连接'
+        : '本地模式 · 未连接';
+    }
     function boot() {
       fetch('/api/health', { cache: 'no-store' })
         .then(function (r) { return r.json(); })
-        .then(function (h) { WB.online = true; WB.health = h; cb(true, h); })
+        .then(function (h) {
+          WB.online = true; WB.health = h;
+          setLocalState(true);
+          cb(true, h);
+        })
         .catch(function () {
           WB.online = false;
+          setLocalState(false);
           if (location.protocol === 'http:') {
             WB.showBanner('未连接工作台服务（示例数据展示中）· 在 workbench 目录运行 node server.js 启动');
           }
